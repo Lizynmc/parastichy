@@ -56,31 +56,31 @@ public class Parastichy extends PApplet {
   private static final float MAX_ELAPSED_SECONDS = 0.1f;
   private static final int MIN_OUTERMOST_BAND_SEED = 2;
 
-  private float centreX;
-  private float centreY;
-  private int seedCount;
+  private final float centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
+  private final float centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
+  private final int seedCount = countSeedsToFillCanvas();
 
-  private float[] seedX;
-  private float[] seedY;
+  private final float[] seedX = new float[seedCount + SEED_BUFFER_PADDING];
+  private final float[] seedY = new float[seedCount + SEED_BUFFER_PADDING];
 
-  private int[] seedAtBand;
-  private int[] bandOfSeed;
-  private float[] blendTowardNextBand;
+  private final int[] seedAtBand = new int[BAND_COUNT];
+  private final int[] bandOfSeed = new int[seedCount + 1];
+  private final float[] blendTowardNextBand = new float[seedCount + 1];
 
-  private float[] qualityByOffsetAndBand;
-  private float[] distanceAtOffset;
-  private float[] peakQualityOfOffset;
-  private int[] bandPicks;
+  private final float[] qualityByOffsetAndBand = new float[OFFSET_SLOTS * BAND_COUNT];
+  private final float[] distanceAtOffset = new float[OFFSET_SLOTS];
+  private final float[] peakQualityOfOffset = new float[OFFSET_SLOTS];
+  private final int[] bandPicks = new int[PICKS_PER_BAND];
 
-  private int[] families;
+  private final int[] families = new int[OFFSET_SLOTS];
   private int familyCount;
-  private boolean[] isFamily;
+  private final boolean[] isFamily = new boolean[OFFSET_SLOTS];
 
-  private float[][] segmentX1;
-  private float[][] segmentY1;
-  private float[][] segmentX2;
-  private float[][] segmentY2;
-  private int[] segmentCount;
+  private final float[][] segmentX1 = new float[OPACITY_STEPS][seedCount];
+  private final float[][] segmentY1 = new float[OPACITY_STEPS][seedCount];
+  private final float[][] segmentX2 = new float[OPACITY_STEPS][seedCount];
+  private final float[][] segmentY2 = new float[OPACITY_STEPS][seedCount];
+  private final int[] segmentCount = new int[OPACITY_STEPS];
 
   private float sweepSeconds;
   private float previousSeconds;
@@ -91,21 +91,7 @@ public class Parastichy extends PApplet {
   }
 
   public void setup() {
-    centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
-    centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
-    seedCount = countSeedsToFillCanvas();
-
-    seedX = new float[seedCount + SEED_BUFFER_PADDING];
-    seedY = new float[seedCount + SEED_BUFFER_PADDING];
-    qualityByOffsetAndBand = new float[OFFSET_SLOTS * BAND_COUNT];
-    distanceAtOffset = new float[OFFSET_SLOTS];
-    peakQualityOfOffset = new float[OFFSET_SLOTS];
-    bandPicks = new int[PICKS_PER_BAND];
-    families = new int[OFFSET_SLOTS];
-    isFamily = new boolean[OFFSET_SLOTS];
-
     buildBands();
-    allocateSegmentBuffers();
 
     strokeCap(ROUND);
     strokeWeight(STROKE_WIDTH);
@@ -123,14 +109,11 @@ public class Parastichy extends PApplet {
   }
 
   private void buildBands() {
-    seedAtBand = new int[BAND_COUNT];
     int outermostBandSeed = max(MIN_OUTERMOST_BAND_SEED, seedCount - OFFSET_SLOTS);
     for (int band = 0; band < BAND_COUNT; band++) {
       seedAtBand[band] = round(pow(outermostBandSeed, (float) band / (BAND_COUNT - 1)));
     }
 
-    bandOfSeed = new int[seedCount + 1];
-    blendTowardNextBand = new float[seedCount + 1];
     for (int n = 1; n <= seedCount; n++) {
       int band = 0;
       while (band < BAND_COUNT - 2 && seedAtBand[band + 1] <= n) {
@@ -141,14 +124,6 @@ public class Parastichy extends PApplet {
       bandOfSeed[n] = band;
       blendTowardNextBand[n] = upper > lower ? constrain((float) (n - lower) / (upper - lower), 0, 1) : 0;
     }
-  }
-
-  private void allocateSegmentBuffers() {
-    segmentX1 = new float[OPACITY_STEPS][seedCount];
-    segmentY1 = new float[OPACITY_STEPS][seedCount];
-    segmentX2 = new float[OPACITY_STEPS][seedCount];
-    segmentY2 = new float[OPACITY_STEPS][seedCount];
-    segmentCount = new int[OPACITY_STEPS];
   }
 
   public void draw() {
