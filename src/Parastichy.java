@@ -26,6 +26,9 @@ public class Parastichy extends PApplet {
 
   private static final int CANVAS_WIDTH = 1200;
   private static final int CANVAS_HEIGHT = 742;
+  private static final float CENTRE_X_RATIO = 0.32f;
+  private static final float CENTRE_Y_RATIO = 0.46f;
+  private static final float CANVAS_REACH_MARGIN = 1.06f;
 
   private static final float PAPER_R = 247, PAPER_G = 248, PAPER_B = 249;
   private static final float INK_R = 22, INK_G = 26, INK_B = 30;
@@ -37,6 +40,8 @@ public class Parastichy extends PApplet {
 
   private static final float SEED_SPACING = 22;
   private static final int MAX_OFFSET = 140;
+  private static final int OFFSET_SLOTS = MAX_OFFSET + 1;
+  private static final int SEED_BUFFER_PADDING = MAX_OFFSET + 2;
   private static final int BAND_COUNT = 48;
   private static final float QUALITY_FALLOFF = 6;
   private static final int PICKS_PER_BAND = 4;
@@ -45,6 +50,11 @@ public class Parastichy extends PApplet {
   private static final int OPACITY_STEPS = 14;
   private static final float MAX_STROKE_OPACITY = 0.85f;
   private static final float STROKE_WIDTH = 1.3f;
+  private static final float MIDPOINT = 0.5f;
+  private static final int MAX_COLOR_CHANNEL = 255;
+  private static final float MILLIS_PER_SECOND = 1000f;
+  private static final float MAX_ELAPSED_SECONDS = 0.1f;
+  private static final int MIN_OUTERMOST_BAND_SEED = 2;
 
   private float centreX;
   private float centreY;
@@ -81,18 +91,18 @@ public class Parastichy extends PApplet {
   }
 
   public void setup() {
-    centreX = CANVAS_WIDTH * 0.32f;
-    centreY = CANVAS_HEIGHT * 0.46f;
+    centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
+    centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
     seedCount = countSeedsToFillCanvas();
 
-    seedX = new float[seedCount + MAX_OFFSET + 2];
-    seedY = new float[seedCount + MAX_OFFSET + 2];
-    qualityByOffsetAndBand = new float[(MAX_OFFSET + 1) * BAND_COUNT];
-    distanceAtOffset = new float[MAX_OFFSET + 1];
-    peakQualityOfOffset = new float[MAX_OFFSET + 1];
+    seedX = new float[seedCount + SEED_BUFFER_PADDING];
+    seedY = new float[seedCount + SEED_BUFFER_PADDING];
+    qualityByOffsetAndBand = new float[OFFSET_SLOTS * BAND_COUNT];
+    distanceAtOffset = new float[OFFSET_SLOTS];
+    peakQualityOfOffset = new float[OFFSET_SLOTS];
     bandPicks = new int[PICKS_PER_BAND];
-    families = new int[MAX_OFFSET + 1];
-    isFamily = new boolean[MAX_OFFSET + 1];
+    families = new int[OFFSET_SLOTS];
+    isFamily = new boolean[OFFSET_SLOTS];
 
     buildBands();
     allocateSegmentBuffers();
@@ -100,7 +110,7 @@ public class Parastichy extends PApplet {
     strokeCap(ROUND);
     strokeWeight(STROKE_WIDTH);
     noFill();
-    previousSeconds = millis() / 1000f;
+    previousSeconds = millis() / MILLIS_PER_SECOND;
   }
 
   private int countSeedsToFillCanvas() {
@@ -109,12 +119,12 @@ public class Parastichy extends PApplet {
     reach = max(reach, dist(CANVAS_WIDTH, 0, centreX, centreY));
     reach = max(reach, dist(0, CANVAS_HEIGHT, centreX, centreY));
     reach = max(reach, dist(CANVAS_WIDTH, CANVAS_HEIGHT, centreX, centreY));
-    return (int) ceil(sq(reach * 1.06f / SEED_SPACING));
+    return (int) ceil(sq(reach * CANVAS_REACH_MARGIN / SEED_SPACING));
   }
 
   private void buildBands() {
     seedAtBand = new int[BAND_COUNT];
-    int outermostBandSeed = max(2, seedCount - MAX_OFFSET - 1);
+    int outermostBandSeed = max(MIN_OUTERMOST_BAND_SEED, seedCount - OFFSET_SLOTS);
     for (int band = 0; band < BAND_COUNT; band++) {
       seedAtBand[band] = round(pow(outermostBandSeed, (float) band / (BAND_COUNT - 1)));
     }
@@ -142,8 +152,8 @@ public class Parastichy extends PApplet {
   }
 
   public void draw() {
-    float now = millis() / 1000f;
-    float elapsed = min(0.1f, now - previousSeconds);
+    float now = millis() / MILLIS_PER_SECOND;
+    float elapsed = min(MAX_ELAPSED_SECONDS, now - previousSeconds);
     previousSeconds = now;
     if (running) {
       sweepSeconds += elapsed;
@@ -162,7 +172,7 @@ public class Parastichy extends PApplet {
   }
 
   private void placeSeeds(float alpha) {
-    int seedLimit = seedCount + MAX_OFFSET + 1;
+    int seedLimit = seedCount + OFFSET_SLOTS;
     for (int n = 1; n < seedLimit; n++) {
       float radius = SEED_SPACING * sqrt(n);
       float angle = (float) ((n * (double) alpha) % TWO_PI);
@@ -255,7 +265,7 @@ public class Parastichy extends PApplet {
         int previous = -1;
         for (int n = start; n <= seedCount; n += k) {
           if (previous > 0) {
-            float weight = (segmentWeightAt(k, previous) + segmentWeightAt(k, n)) * 0.5f;
+            float weight = (segmentWeightAt(k, previous) + segmentWeightAt(k, n)) * MIDPOINT;
             if (weight >= MIN_OPACITY) {
               storeSegment(min(OPACITY_STEPS - 1, (int) (weight * OPACITY_STEPS)), previous, n);
             }
@@ -292,7 +302,7 @@ public class Parastichy extends PApplet {
       if (segmentsInStep == 0) {
         continue;
       }
-      float opacity = ((opacityStep + 0.5f) / OPACITY_STEPS) * MAX_STROKE_OPACITY * 255;
+      float opacity = ((opacityStep + MIDPOINT) / OPACITY_STEPS) * MAX_STROKE_OPACITY * MAX_COLOR_CHANNEL;
       stroke(INK_R, INK_G, INK_B, opacity);
       for (int segment = 0; segment < segmentsInStep; segment++) {
         line(segmentX1[opacityStep][segment], segmentY1[opacityStep][segment],
