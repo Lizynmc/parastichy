@@ -56,9 +56,10 @@ public class Parastichy extends PApplet {
   private static final float MAX_ELAPSED_SECONDS = 0.1f;
   private static final int MIN_OUTERMOST_BAND_SEED = 2;
 
-  private final float centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
-  private final float centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
-  private final int seedCount = countSeedsToFillCanvas();
+  private float centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
+  private float centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
+  private final int measuredSeedCount = countSeedsToCover(reachFromStartingCentre());
+  private final int seedCount = countSeedsToCover(dist(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
 
   private final float[] seedX = new float[seedCount + SEED_BUFFER_PADDING];
   private final float[] seedY = new float[seedCount + SEED_BUFFER_PADDING];
@@ -99,17 +100,21 @@ public class Parastichy extends PApplet {
     previousSeconds = millis() / MILLIS_PER_SECOND;
   }
 
-  private int countSeedsToFillCanvas() {
+  private float reachFromStartingCentre() {
     float reach = 0;
     reach = max(reach, dist(0, 0, centreX, centreY));
     reach = max(reach, dist(CANVAS_WIDTH, 0, centreX, centreY));
     reach = max(reach, dist(0, CANVAS_HEIGHT, centreX, centreY));
     reach = max(reach, dist(CANVAS_WIDTH, CANVAS_HEIGHT, centreX, centreY));
-    return (int) ceil(sq(reach * CANVAS_REACH_MARGIN / SEED_SPACING));
+    return reach;
+  }
+
+  private int countSeedsToCover(float reach) {
+    return ceil(sq(reach * CANVAS_REACH_MARGIN / SEED_SPACING));
   }
 
   private void buildBands() {
-    int outermostBandSeed = max(MIN_OUTERMOST_BAND_SEED, seedCount - OFFSET_SLOTS);
+    int outermostBandSeed = max(MIN_OUTERMOST_BAND_SEED, measuredSeedCount - OFFSET_SLOTS);
     for (int band = 0; band < BAND_COUNT; band++) {
       seedAtBand[band] = round(pow(outermostBandSeed, (float) band / (BAND_COUNT - 1)));
     }
@@ -288,6 +293,19 @@ public class Parastichy extends PApplet {
 
   public void mousePressed() {
     running = !running;
+  }
+
+  public void mouseMoved() {
+    centreOnMouse();
+  }
+
+  public void mouseDragged() {
+    centreOnMouse();
+  }
+
+  private void centreOnMouse() {
+    centreX = mouseX;
+    centreY = mouseY;
   }
 
   public static void main(String[] args) {
