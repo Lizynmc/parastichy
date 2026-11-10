@@ -8,7 +8,7 @@ The image is the spiral arms of a phyllotactic field, drawn without the seeds. A
 
 Which k survive is not assumed. For a grid of radii the program measures the real distance between seed n and seed n + k, and every family is drawn with an opacity falling off from how close it came to being the shortest. Small families hold the centre, large ones the rim, and the bands shift outward as the field grows, which is how a sunflower head is organised.
 
-At the golden angle the surviving families are 2, 3, 5, 8, 13, 21, 34, 55 and 89. No Fibonacci number appears anywhere in the program, so the sequence is a result of the measurement rather than something built into the drawing.
+At the golden angle the surviving families are 2, 3, 5, 8, 13, 21, 34, 55 and 89. 
 
 ## The sweep
 
