@@ -1,0 +1,5 @@
+out/
+*.class
+*.jar
+capture.mp4
+palette.png
