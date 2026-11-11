@@ -16,13 +16,22 @@ Alpha sweeps slowly through a band two and a half degrees either side of the gol
 
 The centre of the field follows the mouse. Click to hold a frame.
 
+## Checking the measurement
+
+The sketch measures distances at one seed in each of 48 bands, looks only forward and only up to an offset of 140, keeps four offsets per band and interpolates between bands. `NeighbourValidation` checks that shortcut against an exact search. It places the seeds again from the definition, in double precision, and finds the true three nearest neighbours of every seed at any offset in either direction, stopping only when the radial gap alone rules out anything closer. A seed's links to its first and second nearest neighbours are the spirals the eye sees, so those are the links that have to be drawn.
+
+Over 33 angles across the sweep, in the field visible from the starting centre, the sketch draws every first and second nearest-neighbour link it could have found. The mean gap between its opacity and the opacity the same formula gives from exact distances is 0.023, about 94% of the drawn ink lies on true nearest-neighbour links, and 48 bands is close to where more bands stop helping: 24 bands give 0.030, 96 give 0.021. The links it does miss, about 0.5% of them, all have an offset beyond 140, such as the 144 arms that appear at the rim just below the golden angle. When the mouse pulls the centre into a corner the far rim comes into view, offsets above 140 take over there and only 87% of nearest links are drawn.
+
+The check fails if the bands lose a contact link within their offset range or if the opacity error rises above 0.03.
+
 ## Running
 
 The sketch needs `core.jar` from Processing.
 
 ```
-javac -cp <core.jar> -d out src/Parastichy.java
+javac -cp <core.jar> -d out src/*.java
 java  -cp <core.jar>:out Parastichy
+java  -cp <core.jar>:out NeighbourValidation
 ```
 
 On Windows use `;` instead of `:` in the classpath.

@@ -12,19 +12,19 @@ public class Parastichy extends PApplet {
   private static final float INK_R = 22, INK_G = 26, INK_B = 30;
 
   private static final double PHI = (1 + Math.sqrt(5)) / 2;
-  private static final float GOLDEN_ANGLE = (float) (TWO_PI / (PHI * PHI));
+  static final float GOLDEN_ANGLE = (float) (TWO_PI / (PHI * PHI));
   private static final float SWEEP_AMPLITUDE = radians(2.5f);
-  private static final float SWEEP_PERIOD_SECONDS = 32;
+  static final float SWEEP_PERIOD_SECONDS = 32;
 
-  private static final float SEED_SPACING = 22;
-  private static final int MAX_OFFSET = 140;
+  static final float SEED_SPACING = 22;
+  static final int MAX_OFFSET = 140;
   private static final int OFFSET_SLOTS = MAX_OFFSET + 1;
   private static final int SEED_BUFFER_PADDING = MAX_OFFSET + 2;
   private static final int BAND_COUNT = 48;
-  private static final float QUALITY_FALLOFF = 6;
+  static final float QUALITY_FALLOFF = 6;
   private static final int PICKS_PER_BAND = 4;
   private static final int MAX_FAMILIES = 14;
-  private static final float MIN_OPACITY = 0.02f;
+  static final float MIN_OPACITY = 0.02f;
   private static final int OPACITY_STEPS = 14;
   private static final float MAX_STROKE_OPACITY = 0.85f;
   private static final float STROKE_WIDTH = 1.3f;
@@ -36,8 +36,8 @@ public class Parastichy extends PApplet {
 
   private float centreX = CANVAS_WIDTH * CENTRE_X_RATIO;
   private float centreY = CANVAS_HEIGHT * CENTRE_Y_RATIO;
-  private final int measuredSeedCount = countSeedsToCover(reachFromStartingCentre());
-  private final int seedCount = countSeedsToCover(dist(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
+  final int measuredSeedCount = countSeedsToCover(reachFromStartingCentre());
+  final int seedCount = countSeedsToCover(dist(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
 
   private final float[] seedX = new float[seedCount + SEED_BUFFER_PADDING];
   private final float[] seedY = new float[seedCount + SEED_BUFFER_PADDING];
@@ -51,8 +51,8 @@ public class Parastichy extends PApplet {
   private final float[] peakQualityOfOffset = new float[OFFSET_SLOTS];
   private final int[] bandPicks = new int[PICKS_PER_BAND];
 
-  private final int[] families = new int[OFFSET_SLOTS];
-  private int familyCount;
+  final int[] families = new int[OFFSET_SLOTS];
+  int familyCount;
   private final boolean[] isFamily = new boolean[OFFSET_SLOTS];
 
   private final float[][] segmentX1 = new float[OPACITY_STEPS][seedCount];
@@ -91,7 +91,7 @@ public class Parastichy extends PApplet {
     return ceil(sq(reach * CANVAS_REACH_MARGIN / SEED_SPACING));
   }
 
-  private void buildBands() {
+  void buildBands() {
     int outermostBandSeed = max(MIN_OUTERMOST_BAND_SEED, measuredSeedCount - OFFSET_SLOTS);
     for (int band = 0; band < BAND_COUNT; band++) {
       seedAtBand[band] = round(pow(outermostBandSeed, (float) band / (BAND_COUNT - 1)));
@@ -124,12 +124,12 @@ public class Parastichy extends PApplet {
     paintSegments();
   }
 
-  private float sweepAngle(float seconds) {
+  float sweepAngle(float seconds) {
     float wave = sin(seconds / SWEEP_PERIOD_SECONDS * TWO_PI);
     return GOLDEN_ANGLE + SWEEP_AMPLITUDE * wave * wave * wave;
   }
 
-  private void placeSeeds(float alpha) {
+  void placeSeeds(float alpha) {
     int seedLimit = seedCount + OFFSET_SLOTS;
     for (int n = 1; n < seedLimit; n++) {
       float radius = SEED_SPACING * sqrt(n);
@@ -139,7 +139,7 @@ public class Parastichy extends PApplet {
     }
   }
 
-  private void measureFamilies() {
+  void measureFamilies() {
     familyCount = 0;
     for (int k = 0; k <= MAX_OFFSET; k++) {
       isFamily[k] = false;
@@ -234,7 +234,7 @@ public class Parastichy extends PApplet {
     }
   }
 
-  private float segmentWeightAt(int k, int n) {
+  float segmentWeightAt(int k, int n) {
     int band = bandOfSeed[n];
     float lower = qualityByOffsetAndBand[k * BAND_COUNT + band];
     float upper = qualityByOffsetAndBand[k * BAND_COUNT + min(BAND_COUNT - 1, band + 1)];
