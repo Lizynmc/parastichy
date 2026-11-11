@@ -33,3 +33,6 @@ jobs:
 
       - name: Compile
         run: javac -Xlint:all -cp lib/core.jar -d out src/*.java
+
+      - name: Validate against exact nearest neighbours
+        run: java -Djava.awt.headless=true -cp lib/core.jar:out NeighbourValidation
